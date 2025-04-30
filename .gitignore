@@ -1,0 +1,21 @@
+#data files
+*.txt
+*.csv
+
+#log files
+*.err
+*.out
+
+#job files
+*.job
+
+#pycache folders
+__pycache__
+*.pyc
+
+#Checkpoints
+*.pt
+*.pth
+
+#tester
+tester.py
