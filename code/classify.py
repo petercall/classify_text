@@ -6,20 +6,20 @@ from transformers import pipeline
 import numpy as np
 from tqdm import tqdm
 import os
+import json
 
 #Hyperparameters--------------------------------------------------------------------------------------------------------------------------------------------------------
-DATA_FILE = "../../data/subjects/train.csv"
-COL_OF_INT = "question"         #This is the column it will be doing the classifying based on
-CLASSIFICATION_COL = "subject"  #This is the column where it will put the subject that had the highest classification score
+DATA_FILE = "../../../data/dolma_classification.csv"
+COL_OF_INT = "short_text"         #This is the column it will be doing the classifying based on
+CLASSIFICATION_COL = "output"  #This is the column where it will put the subject that had the highest classification score
 NUM_TO_DO = "all"               #If this is "all" it will go from the start_position to the end of the file. If it is a number, it will do that many
 START_POSITION = "first nan"    #If this is "first nan" it will start with the first nan found in CLASSIFICATION_COL. If a number, it will start with the index that equals that number
-
 
 # TARGET_CLASSES = ['abstract_algebra', 'anatomy', 'astronomy', 'business_ethics', 'clinical_knowledge', 'college_biology', 'college_chemistry', 'college_computer_science', 'college_mathematics', 'college_medicine', 'college_physics', 'computer_security', 'conceptual_physics', 'econometrics', 'electrical_engineering', 'elementary_mathematics', 'formal_logic', 'global_facts', 'high_school_biology', 'high_school_chemistry', 'high_school_computer_science', 'high_school_european_history', 'high_school_geography', 'high_school_government_and_politics', 'high_school_macroeconomics', 'high_school_mathematics', 'high_school_microeconomics', 'high_school_physics', 'high_school_psychology', 'high_school_statistics', 'high_school_us_history', 'high_school_world_history', 'human_aging', 'human_sexuality', 'international_law', 'jurisprudence', 'logical_fallacies', 'machine_learning', 'management', 'marketing', 'medical_genetics', 'miscellaneous', 'moral_disputes', 'moral_scenarios', 'nutrition', 'philosophy', 'prehistory', 'professional_accounting', 'professional_law', 'professional_medicine', 'professional_psychology', 'public_relations', 'security_studies', 'sociology', 'us_foreign_policy', 'virology', 'world_religions']
 TARGET_CLASSES = ["mathematics", "logic", "physics", "chemistry", "biology", "medicine", "history", "social sciences", "computer science", "business", "law", "philosophy"]
 MODEL_NAME = "facebook/bart-large-mnli"
 BATCH_SIZE = 64
-SAVE_FREQ = 150     #This is the number of data points after which it will save (NOT the number of batches)
+SAVE_FREQ = 1000     #This is the number of data points after which it will save (NOT the number of batches)
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -66,12 +66,22 @@ dataset = MyData(series)
 #Iterate over your dataset and fill the labels Series with the model output
 try:
     for i, output in enumerate(tqdm(pipe(dataset, TARGET_CLASSES, batch_size = BATCH_SIZE), total = len(series))):
-        data.loc[START_POSITION + i, CLASSIFICATION_COL] = output["labels"][0]
+        #Sort the labels and scores to be alphabetical
+        indices = np.argsort(output["labels"])
+        labels = np.array(output["labels"])[indices]
+        labels = list(labels)
+        scores = np.array(output["scores"])[indices]
+        scores = list(scores)
+        
+        #Put the labels and scores into a json string and set that into the dataframe
+        my_dict = {"labels" : labels, "scores" : scores}
+        my_string = json.dumps(my_dict)
+        data.loc[START_POSITION + i, CLASSIFICATION_COL] = my_string
 
         if i % SAVE_FREQ == 0:
             data.to_csv(DATA_FILE, index = False)                
-except:
-    print("exception found")
+except Exception as e:
+    print(f"exception found: {e}")
 finally:
     data.to_csv(DATA_FILE, index = False)             
         
