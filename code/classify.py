@@ -9,8 +9,8 @@ import os
 import json
 
 #Hyperparameters--------------------------------------------------------------------------------------------------------------------------------------------------------
-DATA_FILE = "../../../data/olmo/dolma_classification.csv"
-COL_OF_INT = "short_text"         #This is the column it will be doing the classifying based on
+DATA_FILE = "../../../data/olmo/olmo_bos_1500_generations.csv"
+COL_OF_INT = "0"         #This is the column it will be doing the classifying based on
 CLASSIFICATION_COL = "output"  #This is the column where it will put the subject that had the highest classification score
 NUM_TO_DO = "all"               #If this is "all" it will go from the start_position to the end of the file. If it is a number, it will do that many
 START_POSITION = "first nan"    #If this is "first nan" it will start with the first nan found in CLASSIFICATION_COL. If a number, it will start with the index that equals that number
@@ -19,7 +19,7 @@ START_POSITION = "first nan"    #If this is "first nan" it will start with the f
 TARGET_CLASSES = ["mathematics", "logic", "physics", "chemistry", "biology", "medicine", "history", "social sciences", "computer science", "business", "law", "philosophy"]
 MODEL_NAME = "facebook/bart-large-mnli"
 BATCH_SIZE = 64
-SAVE_FREQ = 1000     #This is the number of data points after which it will save (NOT the number of batches)
+SAVE_FREQ = 490     #This is the number of data points after which it will save (NOT the number of batches)
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
