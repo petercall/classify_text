@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 
 """
 This file is used to compare two different classification results, each of which is a csv file that was saved via the SAVE_COMBINATION variable in the analyze_output.py script.
@@ -7,15 +8,22 @@ It prints out a table of scores with the scores from the first csv file, the sco
 
 
 #Hyperparameters------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-filepath_1 = '../outputs/classifications/olmo/dolma_v1_6_subset2_classification_results.csv'   #This is a csv file that was output from the analyze_output.py file
-name_1 = 'Dolma1'     #This is the name that will appear above the scores for this csv file
-filepath_2 = '../outputs/classifications/olmo/olmo_bos_1500_generations_classification_results.csv'   #This is a second csv file that was output from the analyze_output.py file
-name_2 = 'Bos_Model'    #This is the name that will appear above the scores for this csv file
+file_name1 = "dolma_v1_6_subset1"
+name_1 = 'Dolma'     #This is the name that will appear above the scores for this csv file
+
+file_name2 = "olmo_bos_2000_generations_no_temp"
+name_2 = 'Model'    #This is the name that will appear above the scores for this csv file
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
+
+#Change to the current working directory
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 #Read in the classification results of the two different datasets
+filepath_1 = f"../outputs/classifications/olmo/{file_name1}_classification_results.csv"
+filepath_2 = f"../outputs/classifications/olmo/{file_name2}_classification_results.csv"
 df1 = pd.read_csv(filepath_1, header = 0)
 df2 = pd.read_csv(filepath_2, header = 0)
 
