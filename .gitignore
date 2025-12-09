@@ -17,5 +17,6 @@ __pycache__
 *.pt
 *.pth
 
-#tester
+#Project-specific
 tester.py
+*.png
