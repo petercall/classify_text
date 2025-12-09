@@ -7,10 +7,10 @@ It prints out a table of scores with the scores from the first csv file, the sco
 
 
 #Hyperparameters------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-filepath_1 = '../outputs/classifications/olmo/dolma_classification_results.csv'   #This is a csv file that was output from the analyze_output.py file
-name_1 = 'Data'     #This is the name that will appear above the scores for this csv file
+filepath_1 = '../outputs/classifications/olmo/dolma_v1_6_subset2_classification_results.csv'   #This is a csv file that was output from the analyze_output.py file
+name_1 = 'Dolma1'     #This is the name that will appear above the scores for this csv file
 filepath_2 = '../outputs/classifications/olmo/olmo_bos_1500_generations_classification_results.csv'   #This is a second csv file that was output from the analyze_output.py file
-name_2 = 'Model'    #This is the name that will appear above the scores for this csv file
+name_2 = 'Bos_Model'    #This is the name that will appear above the scores for this csv file
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -28,12 +28,18 @@ combined = pd.concat([df1, df2], axis = 1, ignore_index = False)
 combined["diff"] = combined["scores_1"] - combined["scores_2"]
 
 print()
-print(f"Label\t\t\t{name_1} Score\t{name_2} Score\tDifference")
+print(f"Label\t\t\t\t{name_1} Score\t{name_2} Score\tDifference")
 for i in range(combined.shape[0]):
-    if len(combined.at[i, "labels_1"]) < 6:
-        print(f"{combined.at[i, 'labels_1']}: \t\t\t{round(combined.at[i, 'scores_1']*100, 2)}%\t\t{round(combined.at[i, 'scores_2']*100, 2)}%\t\t{round(combined.at[i, 'diff']*100, 2)}%")
-    elif len(combined.at[i, 'labels_1']) > 11:
-        print(f"{combined.at[i, 'labels_1']}: \t{round(combined.at[i, 'scores_1']*100, 2)}%\t\t{round(combined.at[i, 'scores_2']*100, 2)}%\t\t{round(combined.at[i, 'diff']*100, 2)}%")
+    #Figure out how much whitespace to give each line
+    if len(combined.at[i, "labels_1"]) > 28:
+        whitespace = ''
+    elif len(combined.at[i, 'labels_1']) > 21:
+        whitespace = '\t'
+    elif len(combined.at[i, 'labels_1']) > 15:
+        whitespace = '\t\t'
     else:
-        print(f"{combined.at[i, 'labels_1']}: \t\t{round(combined.at[i, 'scores_data']*100, 2)}%\t\t{round(combined.at[i, 'scores_2']*100, 2)}%\t\t{round(combined.at[i, 'diff']*100, 2)}%")
+        whitespace = '\t\t\t'
+    
+    #Print out the results of that line        
+    print(f"{combined.at[i, 'labels_1']}: {whitespace}{round(combined.at[i, 'scores_1']*100, 2)}%\t\t{round(combined.at[i, 'scores_2']*100, 2)}%\t\t{round(combined.at[i, 'diff']*100, 2)}%")
 print()

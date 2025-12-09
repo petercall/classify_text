@@ -2,6 +2,7 @@ from datasets import load_dataset
 import multiprocessing
 from langdetect import detect
 import random
+import os
 
 """
 The purpose of this file is to get a random sample of the dolma dataset
@@ -71,6 +72,9 @@ def length_and_shortened_text(dict):
 
 
 
+
+#Change directory to the directory that this file is in
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 #Load in the data
 data = load_dataset("allenai/dolma", name = "v1_6-sample", split = "train")

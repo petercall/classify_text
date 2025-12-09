@@ -18,8 +18,8 @@ Each entry of that column is a json string of a python dictionary with key, valu
 
 
 #Hyperparameters--------------------------------------------------------------------------------------------------------------------------------------------------------
-DATA_FILE = "../../../data/olmo/dolma_classification_subset.csv"
-COL_OF_INT = "0"         #This is the column it will be doing the classifying based on
+DATA_FILE = "../../../data/olmo/dolma_v1_6_subset1.csv"
+COL_OF_INT = "short_text"         #This is the column it will be doing the classifying based on
 CLASSIFICATION_COL = "output"  #This is the column where it will put the subject that had the highest classification score
 NUM_TO_DO = "all"               #If this is "all" it will go from the start_position to the end of the file. If it is a number, it will do that many
 START_POSITION = "first nan"    #If this is "first nan" it will start with the first nan found in CLASSIFICATION_COL. If a number, it will start with the index that equals that number
@@ -37,7 +37,7 @@ TARGET_CLASSES = [
 ]
 MODEL_NAME = "facebook/bart-large-mnli"
 BATCH_SIZE = 64
-SAVE_FREQ = 490     #This is the number of data points after which it will save (NOT the number of batches)
+SAVE_FREQ = 499     #This is the number of data points after which it will save (NOT the number of batches)
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

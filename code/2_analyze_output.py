@@ -18,19 +18,20 @@ Two things can then be done:
 """
 
 #Hyperparameters------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-DATA_FILE = "../../../data/olmo/olmo_bos_1500_generations.csv"  #This is the filepath/filename.csv where your data is stored, which should be a csv file that was output from running the classify.py script.
+DATA_FILE = "../../../data/olmo/dolma_v1_6_subset2.csv"  #This is the filepath/filename.csv where your data is stored, which should be a csv file that was output from running the classify.py script (which means it has an "output" column).
 COMBINATION_TYPE = 'weighted'   #This is either 'weighted' or any other string. If 'wieghted', it combines the probability vectors by weighting them according to the original lengths of the text. If any other string, then it combines the probability vectors via a simple average. 
+WEIGHT_COLUMN = 'original_length'   #This is ONLY used if COMBINATION_TYPE = 'weighted'. In this case, this gives the column name that contains the integer weights.
 
 #hyperparameters to combine the classification results
-COMBINE = False              #This is either True or False and determines whether this seciton is skipped over (False), or whether the probability vectors are combined and either printed or saved (True).
+COMBINE = True              #This is either True or False and determines whether this seciton is skipped over (False), or whether the probability vectors are combined and either printed or saved (True).
 PRINT_COMBINATION = False        #This is either True or False. If this is true it will print out the final classification scores.
-SAVE_COMBINATION = "../outputs/classifications/olmo/olmo_bos_1500_generations_classification_results.csv"    #This can be False or a string filepath. If this is False it will not save the final combined probability vector. If it is a filepath then it should end in .csv and it will save the final combined probability vector as a csv file at that location.
+SAVE_COMBINATION = "../outputs/classifications/olmo/dolma_v1_6_subset2_classification_results.csv"    #This can be False or a string filepath. If this is False it will not save the final combined probability vector. If it is a filepath then it should end in .csv and it will save the final combined probability vector as a csv file at that location.
 
 #Hyperparameters to test the convergence of the classification results
 CONVERGENCE = True    #This is either True or False and determines whether this section is skipped over (False) or whether convergence analysis is done and the graph saved and the convergence steps printed out.
-eps = 0.0001          #The epsilon value to used for convergence
-patience = 2          #If the difference between running probability vectors is less than eps for more than patience number of iterations, then it assumes convergence has occurred and stops.  
-GRAPH_LOCATION = '../outputs/graphs/olma_bos_1500_convergence.png'      #This can be False or a string filepath. If it is False, no graph is saved and it only prints out the number of steps it took to converge. Otherwise it will save the graph of the convergence to the filepath and filename.filetype that you specify (doing .png is best). 
+eps = 1e-4            #The epsilon value to used for convergence
+patience = 3          #If the difference between running probability vectors is less than eps for more than patience number of iterations, then it assumes convergence has occurred and stops.  
+GRAPH_LOCATION = '../outputs/graphs/dolma_v1_6_subset2_convergence.png'      #This can be False or a string filepath. If it is False, no graph is saved and it only prints out the number of steps it took to converge. Otherwise it will save the graph of the convergence to the filepath and filename.filetype that you specify (doing .png is best). 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -45,7 +46,7 @@ def combine(accum, new):
 
     #Multiply the scores by the original length
     if COMBINATION_TYPE == 'weighted':
-        scores = scores * new["original_length"]
+        scores = scores * new[WEIGHT_COLUMN]
     
     #If index is 1, then accumm is the first row so we need to extract the scores
     if ind == 1:
@@ -67,7 +68,7 @@ labels = json.loads(df.at[0, "output"])["labels"]
 if COMBINE:    
     output = reduce(combine, df.iterrows())
     if COMBINATION_TYPE == 'weighted':
-        classes = output / df["original_length"].sum()
+        classes = output / df[WEIGHT_COLUMN].sum()
     else:
         classes = output / df.shape[0]
 
