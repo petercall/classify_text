@@ -19,7 +19,7 @@ Two things can then be done:
 """
 
 #Hyperparameters------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-FILENAME = "olmo_bos_2000_generations_4_temps"   #This can be used to quickly adjust all 3 locations that the filename shows up
+FILENAME = "phi_2000_generations_temp_1.5"   #This can be used to quickly adjust all 3 locations that the filename shows up
 DATA_FILE = f"../../../data/olmo/{FILENAME}.csv"  #This is the filepath/filename.csv where your data is stored, which should be a csv file that was output from running the classify.py script (which means it has an "output" column).
 COMBINATION_TYPE = 'weighted'   #This is either 'weighted' or any other string. If 'wieghted', it combines the probability vectors by weighting them according to the original lengths of the text. If any other string, then it combines the probability vectors via a simple average. 
 WEIGHT_COLUMN = 'original_length'   #This is ONLY used if COMBINATION_TYPE = 'weighted'. In this case, this gives the column name that contains the integer weights.

@@ -11,8 +11,8 @@ It prints out a table of scores with the scores from the first csv file, the sco
 file_name1 = "dolma_v1_6_subset1"
 name_1 = 'Dolma'     #This is the name that will appear above the scores for this csv file
 
-file_name2 = "olmo_bos_2000_generations_no_temp"
-name_2 = 'Model'    #This is the name that will appear above the scores for this csv file
+file_name2 = "phi_2000_generations_temp_1.5"
+name_2 = 'Olmo'    #This is the name that will appear above the scores for this csv file
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -34,6 +34,10 @@ df2.rename({"scores": "scores_2", "label": "labels_2"}, axis = 1, inplace = True
 #Combine the two datsets
 combined = pd.concat([df1, df2], axis = 1, ignore_index = False)
 combined["diff"] = combined["scores_1"] - combined["scores_2"]
+
+#Calculate the absolute value of the difference category and sort by that
+combined["abs"] = combined["diff"].abs()
+combined = combined.sort_values("abs", ascending = False).reset_index(drop = True)
 
 print()
 print(f"Label\t\t\t\t{name_1} Score\t{name_2} Score\tDifference")
