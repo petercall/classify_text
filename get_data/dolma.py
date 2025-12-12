@@ -27,7 +27,7 @@ seed = 7                       #You can input an integer and it will use this se
 
 min_length = 10          #Text values must be at least this long in order to be kept in the dataset
 shortened_length = 500  #All texts will be concatenated to this number of characters, which should be enough to categorize the text but will make the categorization much faster computationally
-save_location = '../../../../data/olmo/dolma_v1_6_40_percent.csv'   #This is the location to save the csv file
+save_location = '../../../data/olmo/dolma_v1_6_40_percent.csv'   #This is the location to save the csv file
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #Functions------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

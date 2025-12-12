@@ -21,8 +21,9 @@ Two things can then be done:
 #Hyperparameters------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 FILENAME = "phi_2000_generations_temp_1.5"   #This can be used to quickly adjust all 3 locations that the filename shows up
 DATA_FILE = f"../../../data/olmo/{FILENAME}.csv"  #This is the filepath/filename.csv where your data is stored, which should be a csv file that was output from running the classify.py script (which means it has an "output" column).
-COMBINATION_TYPE = 'weighted'   #This is either 'weighted' or any other string. If 'wieghted', it combines the probability vectors by weighting them according to the original lengths of the text. If any other string, then it combines the probability vectors via a simple average. 
+COMBINATION_TYPE = 'weighted'   #This is either 'weighted' or any other string. If 'weighted', it combines the probability vectors by weighting them according to the original lengths of the text. If any other string, then it combines the probability vectors via a simple average. 
 WEIGHT_COLUMN = 'original_length'   #This is ONLY used if COMBINATION_TYPE = 'weighted'. In this case, this gives the column name that contains the integer weights.
+TOP_K = 3                           #This is how many of the top classes should be used in the combination. You can put 'all' to use all classes, or an integer to use that many of the top classes.
 
 #hyperparameters to combine the classification results
 COMBINE = True              #This is either True or False and determines whether this seciton is skipped over (False), or whether the probability vectors are combined and either printed or saved (True).
@@ -40,21 +41,20 @@ GRAPH_LOCATION = f'../outputs/graphs/{FILENAME}_convergence.png'      #This can 
 #Functions----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def combine(accum, new):
     #Extract the index and row from the input
-    ind, new = new
+    _, new = new
     
     #Get the scores from the output column
     output_dict = json.loads(new["output"])
     scores = np.array(output_dict["scores"])
+    
+    #Get the ordering of the largest scores and set all but the TOP_K to 0
+    if TOP_K != 'all':
+        ordering = np.argsort(scores)[::-1]
+        scores[ordering[TOP_K:]] = 0
 
     #Multiply the scores by the original length
     if COMBINATION_TYPE == 'weighted':
         scores = scores * new[WEIGHT_COLUMN]
-    
-    #If index is 1, then accumm is the first row so we need to extract the scores
-    if ind == 1:
-        ind, accum = accum
-        output_dict = json.loads(accum["output"])
-        accum = np.array(output_dict["scores"])
 
     return accum + scores
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -69,16 +69,17 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 df = pd.read_csv(DATA_FILE, header = 0)
 df = df[~df["output"].isna()].reset_index(drop = True)
 
-#Get the labels
+#Get the labels and count how many there are
 labels = json.loads(df.at[0, "output"])["labels"]
+num_labels = len(labels)
 
 #Run the combine function if specified
 if COMBINE:    
-    output = reduce(combine, df.iterrows())
-    if COMBINATION_TYPE == 'weighted':
-        classes = output / df[WEIGHT_COLUMN].sum()
-    else:
-        classes = output / df.shape[0]
+    #Run the combine function which sums the top_k probabilities of each vector and weights them if specified.
+    output = reduce(combine, df.iterrows(), np.zeros(num_labels))
+    
+    #Divide by the sum of output in order to normalize the output so that it is a probability vector (i.e. so it sums to 1)
+    classes = output / output.sum()
 
     #Print out the different classes
     if PRINT_COMBINATION:
@@ -102,41 +103,32 @@ if COMBINE:
         print(f"Results saved to {SAVE_COMBINATION}")
         
 if CONVERGENCE != False:
-    #Get an original running_scores array and num_combined value of 0, and a running_weight of 0 if specified
-    running_scores = np.zeros(len(labels))
-    num_combined = 0
-    if COMBINATION_TYPE == 'weighted':
-        running_weight = 0
-    
-    #Loop through the dataframe and get the new vector each time and calculate its difference from the running vector
+    #Setup the initial values before running through the loop
+    running_scores = np.zeros(num_labels)
     num_stagnant = 0
     diff_list = []
+    
+    #Loop through the dataframe and get the new vector each time and calculate its difference from the running vector
     for i in range(df.shape[0]):
         #Calculate the current probabilities
         if i == 0:
-            current_probs = np.zeros(len(labels))
+            current_probs = np.zeros(num_labels)
         else:
-            if COMBINATION_TYPE == 'weighted':
-                current_probs = running_scores / running_weight
-            else:
-                current_probs = running_scores / num_combined
+            current_probs = running_scores / running_scores.sum()
         
-        #Get the current scores and weight if specified
+        #Get the current scores
         current_scores = np.array(json.loads(df.at[i, "output"])["scores"])
+        
+        #Weight the current scores if specified, and mask out any but the TOP_K scores if specified
         if COMBINATION_TYPE == 'weighted':
-            current_weight = df.at[i, "original_length"]
-            
-        #Increment the num_combined value up by 1
-        num_combined += 1
-            
-        #Calculate the
-        if COMBINATION_TYPE == 'weighted':
-            running_weight += current_weight
-            running_scores += current_scores * current_weight
-            new_probs = running_scores / running_weight
-        else:
-            running_scores += current_scores
-            new_probs = running_scores / num_combined
+            current_scores *= df.at[i, "original_length"]
+        if TOP_K != 'all':
+            ordering = np.argsort(current_scores)[::-1]
+            current_scores[ordering[TOP_K:]] = 0
+        
+        #Get the new running_scores value and the new_probs
+        running_scores += current_scores
+        new_probs = running_scores / running_scores.sum()
             
         #Get the difference between the current probability vector and the new probability vector, and add it to the diff_list
         diff = la.norm(current_probs - new_probs)
@@ -153,9 +145,12 @@ if CONVERGENCE != False:
             num_stagnant = 0
     
     if GRAPH_LOCATION != False:
+        #Calculate the number of iterations in the convergence test
+        num_iterations = len(diff_list)
+        
         #Create the figure that   
         fig, ax = plt.subplots()
-        ax.plot(range(len(diff_list)), diff_list)
+        ax.plot(range(num_iterations), diff_list)
         ax.set_xlabel("Iteration Number")
         ax.set_ylabel("Difference (2-norm) in Probability Vectors")
         ax.set_title("Convergence Analysis of Classification Task")
@@ -163,7 +158,7 @@ if CONVERGENCE != False:
         # Add text bubble
         ax.text(
             0.95, 0.95,                      # X, Y position (as a fraction of axes)
-            f"Convergence Occured on Iteration: {num_combined}",                      # Text
+            f"Convergence Occurred on Iteration: {num_iterations}",                      # Text
             transform=ax.transAxes,          # Use Axes-relative coordinates (0–1)
             fontsize=12,
             color="black",
@@ -181,4 +176,4 @@ if CONVERGENCE != False:
         plt.savefig(GRAPH_LOCATION)
         
     #Print out how many steps it took to converge
-    print(f"Convergence occurred on step: {num_combined}")
+    print(f"Convergence occurred on step: {num_iterations}")
